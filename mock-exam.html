@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101010">
+<title>모의고사 신청 | MORIPON 몰입온</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:#101010;color:#f4f1eb;font-family:"Pretendard","Noto Sans KR",Arial,sans-serif}
+header{padding:18px 20px;background:#171717;border-bottom:1px solid rgba(198,166,107,.28)}
+header p{margin:0;color:#c6a66b;font-size:11px;font-weight:700;letter-spacing:.2em}
+header h1{margin:7px 0 0;font-size:22px;letter-spacing:-.04em}
+main{width:min(100%,760px);margin:0 auto;padding:14px}
+iframe{display:block;width:100%;height:calc(100vh - 86px);min-height:900px;border:0;background:#fff}
+#status{padding:12px;color:#e0c58f;text-align:center;font-size:13px}
+@media(max-width:600px){header{padding:15px}main{padding:0}iframe{height:calc(100vh - 70px);min-height:1100px}}
+</style>
+</head>
+<body>
+<header><p>MORIPON · MOCK EXAM</p><h1>모의고사 신청</h1></header>
+<main>
+<div id="status" role="status">모의고사 신청서를 불러오는 중입니다.</div>
+<iframe id="examForm" title="몰입온 모의고사 신청서" src="https://docs.google.com/forms/d/e/1FAIpQLSexllNFkotO3anh3SfVaFtSLjwqXW97Rpn9hKAG2WrVjxaZKQ/viewform?embedded=true"></iframe>
+</main>
+<script>
+const frame=document.getElementById("examForm");
+const status=document.getElementById("status");
+let loaded=false;
+frame.addEventListener("load",()=>{
+  if(!loaded){
+    loaded=true;
+    status.textContent="내용을 작성한 뒤 제출해 주세요.";
+    return;
+  }
+  status.textContent="제출이 완료되었습니다. 메인 화면으로 돌아갑니다.";
+  window.location.replace("https://themoripgodeok.github.io/moripon/");
+});
+</script>
+</body>
+</html>
