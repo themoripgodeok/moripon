@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101010">
+<title>정기일정 | MORIPON 몰입온</title>
+<style>
+:root{--bg:#101010;--panel:#191919;--gold:#c6a66b;--gold2:#e0c58f;--text:#f4f1eb;--muted:#aaa49a;--line:rgba(198,166,107,.25)}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0%,#c6a66b18,transparent 42%),linear-gradient(180deg,#151515,#101010 68%);color:var(--text);font-family:"Pretendard","Noto Sans KR",Arial,sans-serif;letter-spacing:-.025em}
+.wrap{width:min(100% - 28px,700px);margin:auto;padding:28px 0 42px}
+header{padding:25px 23px;border:1px solid var(--line);background:linear-gradient(145deg,#24221e,#171717);margin-bottom:14px}
+.eyebrow{color:var(--gold);font-size:11px;letter-spacing:.24em;font-weight:700;margin:0 0 10px}h1{font-size:26px;margin:0;letter-spacing:-.05em}header p:last-child{font-size:13px;line-height:1.75;color:var(--muted);margin:11px 0 0}
+.card{background:var(--panel);border:1px solid var(--line);padding:17px;margin:12px 0;border-radius:3px}
+.title{display:block;font-weight:700;margin-bottom:10px}input[type=text]{width:100%;padding:13px;border:1px solid #514a3d;border-radius:3px;background:#111;color:var(--text);font-size:15px}
+.dayhead{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:13px}.dayhead strong{font-size:17px}.off{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:13px}
+.times{display:grid;grid-template-columns:1fr 1fr;gap:10px}.times label{display:block;font-size:12px;color:var(--muted);margin:0 0 7px}
+.time-btn{width:100%;padding:12px;border:1px solid #514a3d;border-radius:3px;background:#111;color:var(--text);text-align:left;font-size:14px;min-height:45px}.time-btn:disabled{opacity:.4}
+small{display:block;color:#918a7e;margin:8px 0 0;font-size:11px}.disabled{opacity:.4}
+.note{font-size:12px;line-height:1.8;color:var(--muted)}.note strong{color:var(--gold2)}
+button.submit{width:100%;border:1px solid var(--gold);border-radius:3px;background:linear-gradient(135deg,#c6a66b,#a98950);color:#17130d;padding:16px;font-size:16px;font-weight:800;cursor:pointer}
+#status{margin-top:12px;color:var(--gold2);font-size:13px;line-height:1.6}
+.backdrop{display:none;position:fixed;inset:0;background:#000b;z-index:10;align-items:flex-end;justify-content:center}.backdrop.open{display:flex}
+.panel{width:min(100%,520px);max-height:78vh;background:#1b1b1b;border:1px solid var(--line);padding:16px;display:flex;flex-direction:column}
+.picker-head{display:flex;justify-content:space-between;align-items:center;padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:8px}.picker-title{font-weight:700}
+.close{border:1px solid var(--line);background:#29251e;color:var(--gold2);padding:8px 12px;border-radius:3px}
+.picker-list{overflow:auto;display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:4px 0 10px}
+.time-option{border:1px solid #514a3d;background:#242424;color:var(--text);padding:12px 3px;font-size:14px;border-radius:3px}.time-option.selected{background:#3a3122;border-color:var(--gold);color:var(--gold2)}
+body.picker-open{overflow:hidden}
+@media(max-width:430px){.wrap{padding-top:16px}.card{padding:14px}.times{gap:7px}.time-btn{font-size:13px;padding:11px 8px}}
+</style>
+</head>
+<body><main class="wrap">
+<header><p class="eyebrow">MORIPON · SCHEDULE</p><h1>정기일정 등록</h1><p>매월 1일 제출하는 한 달 고정 정기일정입니다.<br>몰입온 실제 도착시간과 퇴실시간을 입력해 주세요.<br>변동사항은 관리자에게 문의해 주세요.</p></header>
+<form id="scheduleForm">
+<section class="card"><label class="title" for="student">이름 및 좌석번호</label><input id="student" type="text" placeholder="예: 홍길동(10)" autocomplete="off" required></section>
+<div id="days"></div>
+<section class="card note"><strong>제출 안내</strong><br>• 평일 운영시간: 08:00~22:00 / 토요일: 08:00~18:00<br>• 몰입온에 실제 도착하고 퇴실하는 시간을 입력해 주세요.<br>• 등원하지 않는 요일은 ‘미등원’을 선택해 주세요.<br>• 제출 내용을 확인한 후 학부모 승인 요청이 진행됩니다.</section>
+<button class="submit" type="submit">정기일정 제출</button><div id="status" role="status"></div>
+</form></main>
+<script>
+const FORM_ACTION="https://docs.google.com/forms/d/e/1FAIpQLSdRvsydeR3244I34-bieHa7WyYTVlpj0YBON_E99ARFVMzC0A/formResponse";
+const ENTRY={student:"1884265043",monday:"1716508254",tuesday:"1138881790",wednesday:"492490073",thursday:"1170848414",friday:"558754052",saturday:"1647835017"};
+const weekdays=[["monday","월요일",22],["tuesday","화요일",22],["wednesday","수요일",22],["thursday","목요일",22],["friday","금요일",22],["saturday","토요일",18]];
+const days=document.getElementById("days");
+function times(endHour){const a=[];for(let h=8;h<=endHour;h++){a.push(String(h).padStart(2,"0")+":00");if(h<endHour)a.push(String(h).padStart(2,"0")+":30")}return a}
+weekdays.forEach(([key,label,end])=>{const card=document.createElement("section");card.className="card";card.innerHTML=`<div class="dayhead"><strong>${label}</strong><label class="off"><input type="checkbox" id="${key}-off"> 미등원</label></div><div class="times"><div><label>${label} 등원시간</label><button type="button" class="time-btn" id="${key}-start-btn">시간 선택</button><input type="hidden" id="${key}-start"></div><div><label>${label} 퇴실시간</label><button type="button" class="time-btn" id="${key}-end-btn">시간 선택</button><input type="hidden" id="${key}-end"></div></div><small>몰입온 실제 도착 및 퇴실 기준 · 30분 단위</small>`;days.appendChild(card);
+const start=document.getElementById(key+"-start"),finish=document.getElementById(key+"-end"),sb=document.getElementById(key+"-start-btn"),fb=document.getElementById(key+"-end-btn"),off=document.getElementById(key+"-off");
+sb.addEventListener("click",()=>openPicker(start,sb,times(end),label+" 등원시간"));fb.addEventListener("click",()=>openPicker(finish,fb,times(end),label+" 퇴실시간"));
+off.addEventListener("change",()=>{sb.disabled=fb.disabled=off.checked;card.querySelector(".times").classList.toggle("disabled",off.checked);});});
+const picker=document.createElement("div");picker.className="backdrop";picker.innerHTML='<div class="panel" role="dialog" aria-modal="true"><div class="picker-head"><strong class="picker-title" id="pickerTitle">시간 선택</strong><button type="button" class="close" id="pickerClose">닫기</button></div><div class="picker-list" id="pickerList"></div></div>';document.body.appendChild(picker);
+let activeInput=null,activeButton=null,savedY=0;function closePicker(){picker.classList.remove("open");document.body.classList.remove("picker-open");activeInput=null;activeButton=null;window.scrollTo(0,savedY)}
+picker.querySelector("#pickerClose").addEventListener("click",closePicker);picker.addEventListener("click",e=>{if(e.target===picker)closePicker()});
+function openPicker(input,button,values,title){activeInput=input;activeButton=button;savedY=window.scrollY;picker.querySelector("#pickerTitle").textContent=title;const list=picker.querySelector("#pickerList");list.innerHTML="";values.forEach(v=>{const b=document.createElement("button");b.type="button";b.className="time-option"+(input.value===v?" selected":"");b.textContent=v;b.addEventListener("click",()=>{input.value=v;button.textContent=v;closePicker()});list.appendChild(b)});picker.classList.add("open");document.body.classList.add("picker-open")}
+document.getElementById("scheduleForm").addEventListener("submit",e=>{e.preventDefault();const name=document.getElementById("student").value.trim();if(!name){alert("이름 및 좌석번호를 입력해 주세요.");return}const answers={student:name};
+for(const [key,label] of weekdays){const off=document.getElementById(key+"-off").checked,start=document.getElementById(key+"-start").value,finish=document.getElementById(key+"-end").value;if(off){answers[key]="미등원";continue}if(!start||!finish){alert(label+" 등원시간과 퇴실시간을 모두 선택하거나 미등원을 선택해 주세요.");return}if(finish<=start){alert(label+" 퇴실시간은 등원시간보다 늦어야 합니다.");return}answers[key]=start+" - "+finish+" (몰입온 등원)"}
+const post=document.createElement("form");post.method="POST";post.action=FORM_ACTION;post.target="_self";Object.entries(answers).forEach(([k,v])=>{const i=document.createElement("input");i.type="hidden";i.name="entry."+ENTRY[k];i.value=v;post.appendChild(i)});document.body.appendChild(post);document.getElementById("status").textContent="제출 중입니다. 잠시만 기다려 주세요.";post.submit();});
+</script></body></html>
